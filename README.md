@@ -1,6 +1,41 @@
 # Photo Sorter
 
-**Lokalna aplikacja Windows** do porządkowania dużych bibliotek zdjęć i filmów.
+**Lokalna aplikacja Windows i macOS** do porządkowania dużych bibliotek zdjęć i filmów.
+
+### Uruchomienie na MacBooku
+
+Główny plik aplikacji to `photo_sorter.py`. Plik `photo_sorter (1).py` jest starszą wersją.
+
+Do uruchomienia ze źródeł potrzebny jest Python 3.11 lub nowszy z obsługą Tkinter
+(np. instalator macOS z [python.org](https://www.python.org/downloads/macos/)).
+W Terminalu, w folderze repozytorium:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python photo_sorter.py
+```
+
+Żeby przygotować samodzielną aplikację uruchamianą dwuklikiem:
+
+```bash
+bash scripts/build_macos.sh
+```
+
+W Finderze otwórz `dist/macos/PhotoSorter.app`. Możesz skopiować ją do folderu
+Programy. Gotowa aplikacja zawiera Pythona i biblioteki; Terminal jest potrzebny
+tylko do jej zbudowania. Paczka ma architekturę Pythona użytego do budowania
+(na Macu Apple Silicon zwykle arm64). Wersję Windows nadal buduje `PhotoSorter.spec`
+na Windows, a wersję macOS — `packaging/macos.spec` na Macu.
+
+Pierwsze sortowanie warto uruchomić z opcją **Tylko sprawdź, nic nie kopiuj**.
+Ustawienia macOS zapisują się w `~/Library/Application Support/PhotoSorter/`.
+Opcjonalne narzędzia `exiftool` lub `ffprobe` poprawiają odczyt dat filmów;
+bez nich program korzysta z pozostałych źródeł dat. Nie są dołączone do paczki.
+Wersja uruchamiana z Findera może wymagać dodania ich do PATH środowiska aplikacji.
+
+Lokalna paczka nie jest podpisana certyfikatem Developer ID ani notaryzowana.
+Przy publicznej dystrybucji należy przygotować podpis i notaryzację dla macOS.
 
 Skanuje wybrany folder **rekurencyjnie**, odczytuje datę wykonania i (opcjonalnie) lokalizację GPS, a następnie **kopiuje** pliki do folderu docelowego w układzie zgodnym z aplikacją **UGREEN Sync & Backup** — domyślnie:
 

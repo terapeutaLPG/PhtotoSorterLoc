@@ -1,0 +1,4 @@
+customtkinter>=5.2,<6
+Pillow>=11,<13
+pillow-heif>=1,<2
+reverse_geocoder>=1.5,<2
