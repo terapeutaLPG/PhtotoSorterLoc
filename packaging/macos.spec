@@ -27,9 +27,10 @@ exe = EXE(
     console=False,
     argv_emulation=False,
 )
-collection = COLLECT(exe, a.binaries, a.datas, name="PhotoSorter")
 app = BUNDLE(
-    collection,
+    exe,
+    a.binaries,
+    a.datas,
     name="PhotoSorter.app",
     bundle_identifier="pl.terapeutalpg.photosorter",
     info_plist={

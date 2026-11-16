@@ -2,13 +2,25 @@
 
 **Lokalna aplikacja Windows i macOS** do porządkowania dużych bibliotek zdjęć i filmów.
 
-Główny plik aplikacji to `photo_sorter.py`. Plik `photo_sorter (1).py` jest starszą wersją.
+Główny plik aplikacji to `photo_sorter.py`. Starsza wersja źródeł jest w `archive/photo_sorter_v1.py`.
 Ten sam kod jest używany na obu systemach; osobne są paczki do uruchamiania dwuklikiem.
 
 | System | Gotowa aplikacja | Budowanie |
 |---|---|---|
-| Windows | `dist\PhotoSorter.exe` | Na Windows, przez `PhotoSorter.spec` |
-| macOS | `dist/macos/PhotoSorter.app` | Na Macu, przez `packaging/macos.spec` |
+| Windows | `dist\windows\PhotoSorter.exe` | Na Windows: `scripts\build_windows.cmd` |
+| macOS | `dist/macos/PhotoSorter.app` | Na Macu: `bash scripts/build_macos.sh` |
+
+### Gotowe pliki i budowanie
+
+- **Do uruchomienia:** otwórz plik dla swojego systemu z folderu `dist/`.
+- **Do zbudowania:** uruchom odpowiedni skrypt z folderu `scripts/`.
+- **Do edycji:** zmieniaj `photo_sorter.py`; oba systemy korzystają z tego pliku.
+- **Starsze wersje:** źródła są w `archive/`, a stary `.exe` w `dist/archive/windows/`.
+
+Foldery `dist/`, `build/`, `.venv/` i `.cache/` powstają lokalnie i są pomijane
+przez Git. Gotowe paczki do pobrania udostępniaj w GitHub Releases.
+VS Code ukrywa pliki robocze w panelu plików przez `.vscode/settings.json`;
+gotowe paczki w `dist/` pozostają widoczne.
 
 ### Uruchomienie na Windows
 
@@ -29,14 +41,13 @@ py -3 -m venv .venv
 Jeśli polecenie `py` nie jest dostępne, użyj `python` zamiast `py -3`.
 Nie trzeba aktywować środowiska ani zmieniać polityki wykonywania skryptów PowerShell.
 
-Żeby zbudować aktualny plik `.exe`, po utworzeniu środowiska wykonaj na Windows:
+Żeby zbudować aktualny plik `.exe`, wykonaj w PowerShellu na Windows:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm PhotoSorter.spec
+.\scripts\build_windows.cmd
 ```
 
-Wynik: `dist\PhotoSorter.exe`. Instrukcje szczegółowe są w sekcjach
+Wynik: `dist\windows\PhotoSorter.exe`. Instrukcje szczegółowe są w sekcjach
 [11](#11-instalacja-python), [12](#12-gotowy-plik-exe) i [13](#13-budowanie-exe-samodzielnie).
 
 ### Uruchomienie na MacBooku
@@ -60,7 +71,7 @@ bash scripts/build_macos.sh
 W Finderze otwórz `dist/macos/PhotoSorter.app`. Możesz skopiować ją do folderu
 Programy. Gotowa aplikacja zawiera Pythona i biblioteki; Terminal jest potrzebny
 tylko do jej zbudowania. Paczka ma architekturę Pythona użytego do budowania
-(na Macu Apple Silicon zwykle arm64). Wersję Windows nadal buduje `PhotoSorter.spec`
+(na Macu Apple Silicon zwykle arm64). Wersję Windows nadal buduje `packaging/windows.spec`
 na Windows, a wersję macOS — `packaging/macos.spec` na Macu.
 
 Pierwsze sortowanie warto uruchomić z opcją **Tylko sprawdź, nic nie kopiuj**.
@@ -409,7 +420,7 @@ Program działa też bez nich; wtedy filmy najczęściej dostaną datę z pliku 
 Po zbudowaniu:
 
 ```text
-E:\PhtotoSorterLoc\dist\PhotoSorter.exe
+E:\PhtotoSorterLoc\dist\windows\PhotoSorter.exe
 ```
 
 Uruchomienie: dwuklik. **Nie trzeba instalować Pythona** na docelowym PC.
@@ -423,31 +434,41 @@ Uruchomienie: dwuklik. **Nie trzeba instalować Pythona** na docelowym PC.
 ## 13. Budowanie .exe samodzielnie
 
 Buduj na **Windows**, w folderze repozytorium. Skorzystaj z istniejącego
-`PhotoSorter.spec`, który zawiera ustawienia pakowania interfejsu i obsługi HEIC.
+`packaging/windows.spec`, który zawiera ustawienia pakowania interfejsu i obsługi HEIC.
 
-### Pierwszy raz
+### Zalecane: skrypt budowania
+
+Skrypt utworzy środowisko `.venv`, zainstaluje biblioteki i zapisze wynik w folderze Windows:
+
+```powershell
+.\scripts\build_windows.cmd
+```
+
+Możesz uruchamiać go ponownie po zmianie kodu. Wymaga Pythona 3.11 lub nowszego.
+
+### Ręczne budowanie
 
 ```powershell
 py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm PhotoSorter.spec
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm --distpath dist\windows --workpath build\windows packaging\windows.spec
 ```
 
 Powstanie m.in.:
 
 | Ścieżka | Co to jest |
 |---------|------------|
-| `dist\PhotoSorter.exe` | Gotowa aplikacja |
-| `PhotoSorter.spec` | Istniejący przepis budowania Windows |
-| `build\` | Cache PyInstallera (można kasować) |
+| `dist\windows\PhotoSorter.exe` | Gotowa aplikacja |
+| `packaging/windows.spec` | Istniejący przepis budowania Windows |
+| `build\windows\` | Pliki robocze PyInstallera dla Windows |
 
 ### Kolejne buildy (po zmianie kodu)
 
 ```powershell
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm PhotoSorter.spec
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm --distpath dist\windows --workpath build\windows packaging\windows.spec
 ```
 
-To **nadpisuje** `dist\PhotoSorter.exe` według zapisanego `.spec`.
+To **nadpisuje** `dist\windows\PhotoSorter.exe` według zapisanego `.spec`.
 
 ### Jak ograniczyć fałszywe alarmy AV
 
@@ -544,24 +565,38 @@ Folder docelowy leżący **wewnątrz** źródłowego jest **pomijany** przy skan
 
 ```text
 PhtotoSorterLoc/
-├── photo_sorter.py          ← wspólny kod Windows i macOS
-├── photo_sorter (1).py      ← stara wersja / kopia (opcjonalnie)
-├── PhotoSorter.spec         ← budowanie Windows .exe
-├── packaging/
-│   └── macos.spec           ← budowanie macOS .app
-├── scripts/
-│   └── build_macos.sh       ← skrypt budowania na Macu
-├── requirements.txt         ← biblioteki aplikacji dla obu systemów
-├── requirements-build.txt   ← biblioteki do budowania paczek
-├── README.md                ← ten plik
-├── dist/
-│   ├── PhotoSorter.exe      ← gotowa aplikacja Windows
-│   └── macos/
-│       └── PhotoSorter.app  ← gotowa aplikacja macOS
-└── build/                   ← artefakty pośrednie PyInstallera
+├── photo_sorter.py              ← wspólna aplikacja Windows i macOS
+├── packaging/                   ← przepisy budowania
+│   ├── windows.spec
+│   └── macos.spec
+├── scripts/                     ← skrypty uruchamiające budowanie
+│   ├── build_windows.cmd
+│   └── build_macos.sh
+├── archive/                     ← stare źródła, poza bieżącą aplikacją
+│   ├── README.md
+│   └── photo_sorter_v1.py
+├── tests/
+├── requirements.txt             ← biblioteki aplikacji
+├── requirements-build.txt       ← biblioteki do budowania
+├── README.md
+├── LICENSE
+├── dist/                        ← gotowe paczki, lokalnie poza Git
+│   ├── windows/
+│   │   └── PhotoSorter.exe
+│   ├── macos/
+│   │   └── PhotoSorter.app
+│   └── archive/windows/
+│       └── PhotoSorter_old.exe
+└── build/                       ← pliki robocze, lokalnie poza Git
+    ├── windows/
+    └── macos/
 ```
 
 Główny plik do uruchomienia ze źródeł: **`photo_sorter.py`**.
+
+Folder `dist/macos/PhotoSorter/`, tworzony wcześniej obok `.app`, był dodatkowym
+wynikiem pakowania. Został przeniesiony do `build/macos/legacy/PhotoSorter/`;
+nowe budowanie macOS tworzy w `dist/macos/` tylko `PhotoSorter.app`.
 
 ---
 
@@ -593,7 +628,7 @@ Teksty UI są w słowniku `TXT` na górze pliku — łatwa lokalizacja / poprawk
 
 ## Szybki start (TL;DR)
 
-- **Windows:** dwuklik w `dist\PhotoSorter.exe` albo [uruchomienie ze źródeł](#uruchomienie-na-windows).
+- **Windows:** dwuklik w `dist\windows\PhotoSorter.exe` albo [uruchomienie ze źródeł](#uruchomienie-na-windows).
 - **macOS:** dwuklik w `dist/macos/PhotoSorter.app` albo [uruchomienie ze źródeł](#uruchomienie-na-macbooku).
 - **Budowanie:** `.exe` buduj na Windows; `.app` buduj na macOS. Obie paczki korzystają z `photo_sorter.py`.
 
