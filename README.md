@@ -2,9 +2,44 @@
 
 **Lokalna aplikacja Windows i macOS** do porządkowania dużych bibliotek zdjęć i filmów.
 
-### Uruchomienie na MacBooku
-
 Główny plik aplikacji to `photo_sorter.py`. Plik `photo_sorter (1).py` jest starszą wersją.
+Ten sam kod jest używany na obu systemach; osobne są paczki do uruchamiania dwuklikiem.
+
+| System | Gotowa aplikacja | Budowanie |
+|---|---|---|
+| Windows | `dist\PhotoSorter.exe` | Na Windows, przez `PhotoSorter.spec` |
+| macOS | `dist/macos/PhotoSorter.app` | Na Macu, przez `packaging/macos.spec` |
+
+### Uruchomienie na Windows
+
+Gotowy `PhotoSorter.exe` uruchom dwuklikiem — nie wymaga instalowania Pythona.
+Plik `.app` jest przeznaczony dla macOS, a `.exe` dla Windows.
+Dołączone wcześniej pliki `.exe` nie aktualizują się po zmianie kodu; aby uzyskać
+wersję z aktualnych źródeł, trzeba zbudować je ponownie na Windows.
+
+Do uruchomienia ze źródeł zainstaluj Python 3.11 lub nowszy z obsługą Tkinter.
+W PowerShellu, w folderze repozytorium:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe photo_sorter.py
+```
+
+Jeśli polecenie `py` nie jest dostępne, użyj `python` zamiast `py -3`.
+Nie trzeba aktywować środowiska ani zmieniać polityki wykonywania skryptów PowerShell.
+
+Żeby zbudować aktualny plik `.exe`, po utworzeniu środowiska wykonaj na Windows:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm PhotoSorter.spec
+```
+
+Wynik: `dist\PhotoSorter.exe`. Instrukcje szczegółowe są w sekcjach
+[11](#11-instalacja-python), [12](#12-gotowy-plik-exe) i [13](#13-budowanie-exe-samodzielnie).
+
+### Uruchomienie na MacBooku
 
 Do uruchomienia ze źródeł potrzebny jest Python 3.11 lub nowszy z obsługą Tkinter
 (np. instalator macOS z [python.org](https://www.python.org/downloads/macos/)).
@@ -49,7 +84,7 @@ Program **niczego nie przenosi i nie usuwa**. Oryginały zostają nietknięte. I
 
 | | |
 |---|---|
-| Platforma | Windows 11 (Python 3.11+ albo gotowy `.exe`) |
+| Platforma | Windows 11 i macOS (Python 3.11+ albo gotowa paczka dla danego systemu) |
 | Formaty | JPG, JPEG, PNG, HEIC/HEIF, WEBP, MP4, MOV, 3GP, MKV |
 | Sieć | Offline (GPS → miasto lokalnie przez `reverse_geocoder`) |
 | Bezpieczeństwo | Tylko kopiowanie (`shutil.copy2`), bez kasowania |
@@ -332,22 +367,32 @@ Na końcu: podsumowanie **skopiowano / pominięto / błędy**. Błąd jednego pl
 
 Ostatnie ustawienia (ścieżki, układ, hash) są zapamiętywane w:
 
-```text
-%APPDATA%\PhotoSorter\config.json
-```
+| System | Plik ustawień |
+|---|---|
+| Windows | `%APPDATA%\PhotoSorter\config.json` |
+| macOS | `~/Library/Application Support/PhotoSorter/config.json` |
 
 ---
 
 ## 11. Instalacja (Python)
 
-Wymagania: **Windows 11**, **Python 3.11+**.
+Wymagania: **Windows 11 lub macOS**, **Python 3.11+** z obsługą Tkinter.
+Wszystkie wymagane biblioteki, w tym interfejs `customtkinter`, są w `requirements.txt`.
+
+**Windows — PowerShell, w folderze repozytorium:**
 
 ```powershell
-cd E:\PhtotoSorterLoc
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install pillow pillow-heif reverse_geocoder
-python photo_sorter.py
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe photo_sorter.py
+```
+
+**macOS — Terminal, w folderze repozytorium:**
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python photo_sorter.py
 ```
 
 ### Opcjonalnie (lepsze daty filmów)
@@ -377,15 +422,15 @@ Uruchomienie: dwuklik. **Nie trzeba instalować Pythona** na docelowym PC.
 
 ## 13. Budowanie .exe samodzielnie
 
-### Pierwszy raz (pełna komenda)
+Buduj na **Windows**, w folderze repozytorium. Skorzystaj z istniejącego
+`PhotoSorter.spec`, który zawiera ustawienia pakowania interfejsu i obsługi HEIC.
+
+### Pierwszy raz
 
 ```powershell
-pip install pyinstaller
-cd E:\PhtotoSorterLoc
-pyinstaller --noconfirm --onefile --windowed --name PhotoSorter `
-  --hidden-import=PIL --hidden-import=pillow_heif --hidden-import=reverse_geocoder `
-  --collect-all reverse_geocoder --collect-all pillow_heif `
-  photo_sorter.py
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm PhotoSorter.spec
 ```
 
 Powstanie m.in.:
@@ -393,13 +438,13 @@ Powstanie m.in.:
 | Ścieżka | Co to jest |
 |---------|------------|
 | `dist\PhotoSorter.exe` | Gotowa aplikacja |
-| `PhotoSorter.spec` | Przepis builda (do powtórek) |
+| `PhotoSorter.spec` | Istniejący przepis budowania Windows |
 | `build\` | Cache PyInstallera (można kasować) |
 
 ### Kolejne buildy (po zmianie kodu)
 
 ```powershell
-pyinstaller --noconfirm PhotoSorter.spec
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm PhotoSorter.spec
 ```
 
 To **nadpisuje** `dist\PhotoSorter.exe` według zapisanego `.spec`.
@@ -415,11 +460,17 @@ To **nadpisuje** `dist\PhotoSorter.exe` według zapisanego `.spec`.
 
 ## 14. Konfiguracja i pliki na dysku
 
+**Windows:**
+
 ```text
 %APPDATA%\PhotoSorter\
 ├── config.json              ← ostatnie ścieżki / układ / hash
 └── photo_sorter_log_*.csv   ← logi, gdy źródło jest read-only
 ```
+
+**macOS:** te same pliki trafiają do `~/Library/Application Support/PhotoSorter/`.
+Domyślnie log CSV jest zapisywany w folderze źródłowym; folder ustawień jest
+używany wtedy, gdy nie da się zapisać logu w źródle.
 
 Przykład `config.json`:
 
@@ -493,12 +544,20 @@ Folder docelowy leżący **wewnątrz** źródłowego jest **pomijany** przy skan
 
 ```text
 PhtotoSorterLoc/
-├── photo_sorter.py          ← kod źródłowy (to edytujesz)
+├── photo_sorter.py          ← wspólny kod Windows i macOS
 ├── photo_sorter (1).py      ← stara wersja / kopia (opcjonalnie)
-├── PhotoSorter.spec         ← przepis PyInstallera
+├── PhotoSorter.spec         ← budowanie Windows .exe
+├── packaging/
+│   └── macos.spec           ← budowanie macOS .app
+├── scripts/
+│   └── build_macos.sh       ← skrypt budowania na Macu
+├── requirements.txt         ← biblioteki aplikacji dla obu systemów
+├── requirements-build.txt   ← biblioteki do budowania paczek
 ├── README.md                ← ten plik
 ├── dist/
-│   └── PhotoSorter.exe      ← gotowa aplikacja
+│   ├── PhotoSorter.exe      ← gotowa aplikacja Windows
+│   └── macos/
+│       └── PhotoSorter.app  ← gotowa aplikacja macOS
 └── build/                   ← artefakty pośrednie PyInstallera
 ```
 
@@ -534,17 +593,9 @@ Teksty UI są w słowniku `TXT` na górze pliku — łatwa lokalizacja / poprawk
 
 ## Szybki start (TL;DR)
 
-```powershell
-# Wariant A — Python
-pip install pillow pillow-heif reverse_geocoder
-python photo_sorter.py
-
-# Wariant B — gotowy exe
-E:\PhtotoSorterLoc\dist\PhotoSorter.exe
-
-# Wariant C — przebudowa exe po zmianach
-pyinstaller --noconfirm PhotoSorter.spec
-```
+- **Windows:** dwuklik w `dist\PhotoSorter.exe` albo [uruchomienie ze źródeł](#uruchomienie-na-windows).
+- **macOS:** dwuklik w `dist/macos/PhotoSorter.app` albo [uruchomienie ze źródeł](#uruchomienie-na-macbooku).
+- **Budowanie:** `.exe` buduj na Windows; `.app` buduj na macOS. Obie paczki korzystają z `photo_sorter.py`.
 
 1. Wybierz folder ze zdjęciami.  
 2. Wybierz folder docelowy.  
