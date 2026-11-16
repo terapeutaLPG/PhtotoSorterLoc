@@ -23,6 +23,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import threading
 import datetime as dt
 from tkinter import filedialog, messagebox
@@ -57,7 +58,10 @@ TYPE_VIDEO = "Filmy"
 TYPE_SCREENSHOT = "Zrzuty ekranu"
 TYPE_OTHER = "Inne"
 
-CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "PhotoSorter")
+if sys.platform == "darwin":
+    CONFIG_DIR = os.path.expanduser("~/Library/Application Support/PhotoSorter")
+else:
+    CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "PhotoSorter")
 CONFIG = os.path.join(CONFIG_DIR, "config.json")
 
 NAME_DATE_RE = re.compile(
@@ -133,6 +137,21 @@ MODE_BUILDERS = {
     "year_place": lambda t, city: [f"{t.year}", city or NO_PLACE],
     "year_month_place": lambda t, city: [f"{t.year}", f"{t.month:02d}", city or NO_PLACE],
 }
+
+
+if os.sep != "\\":
+    for group in ("modes", "mode_trees"):
+        TXT[group] = {key: value.replace("\\", os.sep) for key, value in TXT[group].items()}
+    TXT["dev_tip"] = TXT["dev_tip"].replace("\\", os.sep)
+
+
+def open_path(path: str) -> None:
+    """Open a folder or file with the system's default application."""
+    if sys.platform == "win32":
+        os.startfile(path)
+    else:
+        command = "open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.run([command, os.path.abspath(path)], check=True)
 
 
 def safe(name: str) -> str:
@@ -827,15 +846,16 @@ class App(ctk.CTk):
             self.adv_btn.configure(text="▸  " + TXT["advanced"])
 
     def refresh_example(self):
-        dst = self.dst.get().strip() or r"D:\Posortowane"
+        default_dst = r"D:\Posortowane" if os.name == "nt" else os.path.expanduser("~/Pictures/Posortowane")
+        dst = self.dst.get().strip() or default_dst
         dev = safe(self.dev.get())
         base = os.path.join(dst, dev) if dev else dst
         key = self.mode.get() if self.mode.get() in MODE_BUILDERS else DEFAULT_MODE
-        sample = TXT["mode_trees"].get(key, r"2024\04\zdjęcie.jpg")
+        sample = TXT["mode_trees"].get(key, os.path.join("2024", "04", "zdjęcie.jpg"))
         if self.split_type.get():
-            parts = sample.rsplit("\\", 1)
+            parts = sample.rsplit(os.sep, 1)
             if len(parts) == 2:
-                sample = parts[0] + "\\Filmy\\" + parts[1]
+                sample = os.path.join(parts[0], "Filmy", parts[1])
         path = os.path.join(base, sample)
         self.example.configure(text=f"{TXT['example']} {path}")
 
@@ -993,14 +1013,14 @@ class App(ctk.CTk):
             def open_folder():
                 target = folder if os.path.isdir(win_long(folder)) else os.path.dirname(folder)
                 try:
-                    os.startfile(target)
-                except OSError:
+                    open_path(target)
+                except (OSError, subprocess.CalledProcessError):
                     messagebox.showwarning(APP_TITLE, "Nie udało się otworzyć folderu.")
 
             def open_log():
                 try:
-                    os.startfile(log_path)
-                except OSError:
+                    open_path(log_path)
+                except (OSError, subprocess.CalledProcessError):
                     messagebox.showwarning(APP_TITLE, "Nie udało się otworzyć pliku logu.")
 
             ctk.CTkButton(row, text=TXT["open_folder"], command=open_folder).pack(side="left", padx=(0, 8))

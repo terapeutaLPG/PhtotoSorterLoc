@@ -1,0 +1,9 @@
+{
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".cache": true,
+    ".venv": true,
+    "build": true
+  }
+}
